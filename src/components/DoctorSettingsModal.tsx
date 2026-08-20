@@ -153,7 +153,22 @@ export const DoctorSettingsModal: React.FC<DoctorSettingsModalProps> = ({
             <User className="w-3.5 h-3.5" />
             Doctor & Hospital Profile
           </button>
+
+          <button
+            id="tab-supabase-btn"
+            type="button"
+            onClick={() => setActiveTab('supabase' as any)}
+            className={`pb-2.5 px-4 text-xs font-bold transition border-b-2 flex items-center gap-2 shrink-0 ${
+              (activeTab as any) === 'supabase'
+                ? 'border-[#004ac6] text-[#004ac6]'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5" />
+            Supabase Cloud & Key Tokens
+          </button>
         </div>
+
 
         {/* Modal Body: Scrollable */}
         <div className="flex-1 overflow-y-auto pr-1">
@@ -267,8 +282,125 @@ export const DoctorSettingsModal: React.FC<DoctorSettingsModalProps> = ({
               </div>
             </form>
           )}
+
+          {/* Tab 2: Supabase Cloud & Key Tokens */}
+          {activeTab === 'supabase' && (
+            <div className="space-y-4 pt-1">
+              <div className="bg-[#FAF8FF] border border-[#C3C6D7] rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="w-4 h-4 text-[#004ac6]" />
+                    <span className="text-xs font-bold text-[#131b2e]">
+                      Supabase Database & API Key Token
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    isSupabaseConfigured()
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-slate-100 text-slate-600 border-slate-200'
+                  }`}>
+                    {isSupabaseConfigured() ? 'Connected' : 'Standalone Mode'}
+                  </span>
+                </div>
+                <p className="text-xs text-[#434655] leading-relaxed">
+                  Store and restore your doctor credentials, clinical records, and Google Workspace sync keys securely in PostgreSQL with Row Level Security.
+                </p>
+
+                <div className="space-y-3 pt-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#131b2e] mb-1">
+                      Project URL (e.g., https://xyzcompany.supabase.co)
+                    </label>
+                    <input
+                      type="url"
+                      value={supabaseUrl}
+                      onChange={(e) => setSupabaseUrl(e.target.value)}
+                      placeholder="https://your-project.supabase.co"
+                      className="w-full px-3 py-2 text-xs border border-[#C3C6D7] rounded-lg focus:ring-1 focus:ring-[#004ac6] bg-white text-[#131b2e]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#131b2e] mb-1">
+                      Anon Public API Key / Service Token
+                    </label>
+                    <input
+                      type="text"
+                      value={supabaseAnonKey}
+                      onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      className="w-full px-3 py-2 text-xs border border-[#C3C6D7] rounded-lg focus:ring-1 focus:ring-[#004ac6] bg-white text-[#131b2e] font-mono"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (saveSupabaseConfig({ url: supabaseUrl, anonKey: supabaseAnonKey })) {
+                          onShowToast('success', 'Supabase credentials saved successfully.', 'Config Saved');
+                        }
+                      }}
+                      className="px-4 py-2 bg-[#004ac6] hover:bg-[#2563eb] text-white text-xs font-bold rounded-lg transition cursor-pointer"
+                    >
+                      Save Configuration
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isTestingSupabase || !supabaseUrl || !supabaseAnonKey}
+                      onClick={async () => {
+                        setIsTestingSupabase(true);
+                        saveSupabaseConfig({ url: supabaseUrl, anonKey: supabaseAnonKey });
+                        const res = await testSupabaseConnection();
+                        setIsTestingSupabase(false);
+                        setSupabaseStatusMsg(res.message);
+                        onShowToast(res.success ? 'success' : 'error', res.message, 'Supabase Connection Test');
+                      }}
+                      className="px-4 py-2 bg-white border border-[#C3C6D7] hover:bg-[#F2F3FF] text-[#131b2e] text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {isTestingSupabase ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Testing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Test Connection</span>
+                        </>
+                      )}
+                    </button>
+
+                    {isSupabaseConfigured() && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          clearCustomSupabaseConfig();
+                          setSupabaseUrl('');
+                          setSupabaseAnonKey('');
+                          setSupabaseStatusMsg('');
+                          onShowToast('info', 'Supabase config cleared.', 'Reset');
+                        }}
+                        className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-rose-600 transition"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+
+                  {supabaseStatusMsg && (
+                    <div className="text-[11px] font-mono p-2.5 rounded-lg bg-white border border-[#C3C6D7] text-[#131b2e]">
+                      {supabaseStatusMsg}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+
 };
