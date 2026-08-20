@@ -47,7 +47,12 @@ export const GoogleWorkspacePage: React.FC<GoogleWorkspacePageProps> = ({
   const handleConnectOrSwitch = async (isSwitch: boolean = false) => {
     setIsLoading(true);
     try {
-      await signInWithGoogleWorkspacePopup(doctor.name, doctor.id, 'select_account consent');
+      await signInWithGoogleWorkspacePopup(
+        doctor.name,
+        doctor.id,
+        isSwitch ? 'select_account' : 'consent',
+        doctor.email
+      );
       const updated = getDoctorGoogleAuth(doctor.id);
       setGoogleAuth(updated);
       setIsLoading(false);
@@ -63,6 +68,7 @@ export const GoogleWorkspacePage: React.FC<GoogleWorkspacePageProps> = ({
       onShowToast('error', err?.message || 'Google authentication was cancelled.', 'Google Connection');
     }
   };
+
 
   const handleDisconnect = () => {
     const cleared = disconnectDoctorGoogleAuth(doctor.id);

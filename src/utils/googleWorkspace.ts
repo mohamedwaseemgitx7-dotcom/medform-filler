@@ -193,7 +193,8 @@ export async function fetchGoogleUserProfile(token: string): Promise<{ email: st
  */
 export async function requestGisAccessToken(
   promptType: string = 'select_account',
-  customScope?: string
+  customScope?: string,
+  loginHint?: string
 ): Promise<{ accessToken: string; expiresIn: number }> {
   await ensureGisLoaded();
 
@@ -267,7 +268,15 @@ export async function requestGisAccessToken(
         }
       }, 75000);
 
-      tokenClient.requestAccessToken({ prompt: promptType });
+      const requestOptions: any = {};
+      if (promptType) {
+        requestOptions.prompt = promptType;
+      }
+      if (loginHint && loginHint.includes('@') && !loginHint.includes('example.com')) {
+        requestOptions.hint = loginHint;
+      }
+
+      tokenClient.requestAccessToken(requestOptions);
     } catch (err) {
       if (!isSettled) {
         isSettled = true;
@@ -284,7 +293,8 @@ export async function requestGisAccessToken(
 export async function signInWithGoogleWorkspacePopup(
   doctorName: string = 'Doctor',
   doctorId: string = 'default',
-  promptType?: string
+  promptType?: string,
+  userEmailHint?: string
 ): Promise<{ accessToken: string; spreadsheetId: string; spreadsheetUrl: string; folderId: string; folderUrl: string; userEmail: string }> {
   let token: string | null = null;
 
@@ -292,8 +302,9 @@ export async function signInWithGoogleWorkspacePopup(
 
   try {
     const gisRes = await requestGisAccessToken(
-      promptType || 'select_account',
-      'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile'
+      promptType || 'consent',
+      'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+      userEmailHint
     );
     token = gisRes.accessToken;
   } catch (gisErr: any) {
@@ -303,6 +314,7 @@ export async function signInWithGoogleWorkspacePopup(
       gisErr.message || 'Google Workspace access was cancelled or blocked by the browser.'
     );
   }
+
 
   if (!token) {
     isSigningIn = false;
