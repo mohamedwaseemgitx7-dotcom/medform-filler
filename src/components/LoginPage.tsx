@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AlertCircle, RefreshCw, Stethoscope, ShieldCheck, Zap, UserCheck } from 'lucide-react';
 import { DoctorProfile } from '../types';
-import { signInDoctorWithGoogle, setCurrentDoctor, getStoredDoctors } from '../utils/storage';
+import { signInDoctorWithGoogle, setCurrentDoctor, getStoredDoctors, saveStoredDoctor } from '../utils/storage';
 import {
   requestGisAccessToken,
   fetchGoogleUserProfile,
@@ -90,17 +90,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onShowToas
   const handleInstantAccess = (customName?: string) => {
     setIsLoading(true);
     try {
-      const existing = getStoredDoctors();
       let doc: DoctorProfile;
+      const existing = getStoredDoctors();
 
       if (existing.length > 0) {
         doc = existing[0];
       } else {
-        doc = signInDoctorWithGoogle(
-          'doctor@clinical.vault',
-          customName || 'Dr. Consultant Perfusionist',
-          undefined
-        );
+        doc = {
+          id: `DOC-MAIN-${Date.now().toString(36).toUpperCase()}`,
+          name: customName || 'Dr. Consultant Perfusionist',
+          email: 'doctor@clinical.vault',
+          username: 'doctor',
+          authProvider: 'google',
+          hospital: 'Apex Heart & Lung Institute',
+          department: 'Cardiothoracic Surgery & Perfusion',
+          role: 'Consultant Cardiac Surgeon & Perfusionist',
+        };
+        saveStoredDoctor(doc);
       }
 
       setCurrentDoctor(doc);
@@ -108,10 +114,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onShowToas
       onShowToast('success', `Signed in as ${doc.name}`, 'Clinical Vault Active');
       onLoginSuccess(doc, false);
     } catch (err: any) {
+      console.warn('Instant access fallback:', err);
+      const fallbackDoc: DoctorProfile = {
+        id: 'DOC-LOCAL-FALLBACK',
+        name: customName || 'Dr. Consultant Perfusionist',
+        email: 'doctor@clinical.vault',
+        hospital: 'Apex Heart & Lung Institute',
+        department: 'Cardiothoracic Surgery & Perfusion',
+        role: 'Consultant Cardiac Surgeon & Perfusionist',
+      };
+      setCurrentDoctor(fallbackDoc);
       setIsLoading(false);
-      onShowToast('error', 'Failed to initialize session.', 'Error');
+      onLoginSuccess(fallbackDoc, false);
     }
   };
+
 
 
   return (

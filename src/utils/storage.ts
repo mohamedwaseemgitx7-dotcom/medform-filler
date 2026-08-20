@@ -419,9 +419,39 @@ const STORAGE_KEY_RECORDS = 'medforms_patient_records_v3';
 const STORAGE_KEY_DOCTORS = 'medforms_registered_doctors_v3';
 const STORAGE_KEY_AUTH_SESSION = 'medforms_auth_session_doctor_id';
 
+const inMemoryStorage: Record<string, string> = {};
+
+function safeStorageGet(key: string): string | null {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const val = window.localStorage.getItem(key);
+      if (val !== null) return val;
+    }
+  } catch {}
+  return inMemoryStorage[key] || null;
+}
+
+function safeStorageSet(key: string, value: string): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {}
+  inMemoryStorage[key] = value;
+}
+
+function safeStorageRemove(key: string): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  } catch {}
+  delete inMemoryStorage[key];
+}
+
 export function getStoredDoctors(): DoctorProfile[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_DOCTORS);
+    const raw = safeStorageGet(STORAGE_KEY_DOCTORS);
     if (!raw) {
       return [];
     }
@@ -432,22 +462,27 @@ export function getStoredDoctors(): DoctorProfile[] {
 }
 
 export function saveStoredDoctor(doctor: DoctorProfile): void {
-  const doctors = getStoredDoctors();
-  const idx = doctors.findIndex((d) => d.id === doctor.id || d.email.toLowerCase() === doctor.email.toLowerCase());
-  if (idx >= 0) {
-    doctors[idx] = { ...doctors[idx], ...doctor };
-  } else {
-    doctors.push(doctor);
+  try {
+    const doctors = getStoredDoctors();
+    const idx = doctors.findIndex((d) => d.id === doctor.id || d.email.toLowerCase() === doctor.email.toLowerCase());
+    if (idx >= 0) {
+      doctors[idx] = { ...doctors[idx], ...doctor };
+    } else {
+      doctors.push(doctor);
+    }
+    safeStorageSet(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
+  } catch (e) {
+    console.warn('saveStoredDoctor note:', e);
   }
-  localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
 }
+
 
 export function updateDoctorProfile(doctorId: string, updates: Partial<DoctorProfile>): DoctorProfile {
   const doctors = getStoredDoctors();
   const idx = doctors.findIndex((d) => d.id === doctorId);
   if (idx >= 0) {
     doctors[idx] = { ...doctors[idx], ...updates };
-    localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
+    safeStorageSet(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
     return doctors[idx];
   }
   const current = getCurrentDoctor();
@@ -508,7 +543,7 @@ export function registerDoctorAccount(profile: {
     doctors.push(newDoc);
   }
 
-  localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
+  safeStorageSet(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
   return newDoc;
 }
 
@@ -524,7 +559,7 @@ export function signInDoctorWithGoogle(
   if (existing) {
     if (googleName && (!existing.name || existing.name === 'Dr. Practitioner')) {
       existing.name = googleName.startsWith('Dr.') ? googleName : `Dr. ${googleName}`;
-      localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
+      safeStorageSet(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
     }
     return existing;
   }
@@ -546,14 +581,14 @@ export function signInDoctorWithGoogle(
   };
 
   doctors.push(newDoc);
-  localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
+  safeStorageSet(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
   return newDoc;
 }
 
 export function clearAllPatientRecords(): void {
   try {
-    localStorage.removeItem(STORAGE_KEY_RECORDS);
-    localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify([]));
+    safeStorageRemove(STORAGE_KEY_RECORDS);
+    safeStorageSet(STORAGE_KEY_RECORDS, JSON.stringify([]));
   } catch (err) {
     console.error('Failed to clear records', err);
   }
@@ -561,7 +596,7 @@ export function clearAllPatientRecords(): void {
 
 export function getStoredRecords(): PatientRecord[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_RECORDS);
+    const raw = safeStorageGet(STORAGE_KEY_RECORDS);
     if (!raw) {
       return [];
     }
@@ -573,15 +608,15 @@ export function getStoredRecords(): PatientRecord[] {
 
 export function saveStoredRecords(records: PatientRecord[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(records));
+    safeStorageSet(STORAGE_KEY_RECORDS, JSON.stringify(records));
   } catch (err) {
-    console.error('Failed to write to localStorage', err);
+    console.error('Failed to write to safeStorage', err);
   }
 }
 
 export function getActiveSessionDoctorId(): string | null {
   try {
-    return localStorage.getItem(STORAGE_KEY_AUTH_SESSION);
+    return safeStorageGet(STORAGE_KEY_AUTH_SESSION);
   } catch {
     return null;
   }
@@ -590,9 +625,9 @@ export function getActiveSessionDoctorId(): string | null {
 export function setActiveSessionDoctorId(doctorId: string | null): void {
   try {
     if (doctorId) {
-      localStorage.setItem(STORAGE_KEY_AUTH_SESSION, doctorId);
+      safeStorageSet(STORAGE_KEY_AUTH_SESSION, doctorId);
     } else {
-      localStorage.removeItem(STORAGE_KEY_AUTH_SESSION);
+      safeStorageRemove(STORAGE_KEY_AUTH_SESSION);
     }
   } catch {}
 }
@@ -659,7 +694,7 @@ export async function registerDoctorWithPin(profile: {
   };
 
   doctors.push(newDoc);
-  localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
+  safeStorageSet(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
   return newDoc;
 }
 
@@ -723,7 +758,7 @@ export async function updateDoctorPin(doctorId: string, newPin?: string): Promis
     ? await hashPin(newPin)
     : undefined;
 
-  localStorage.setItem(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
+  safeStorageSet(STORAGE_KEY_DOCTORS, JSON.stringify(doctors));
   return true;
 }
 
