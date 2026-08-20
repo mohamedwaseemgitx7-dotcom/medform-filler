@@ -1,0 +1,6 @@
+{
+  "name": "MedForms Pro",
+  "description": "Perfusion and ICU clinical forms management system with secure doctor authentication, multi-doctor data isolation, Google Sheets 4-tab synchronization, Google Drive cloud PDF archiving, exact clinical document layouts, and high-fidelity PDF exports for Adult CPB, Pediatric CPB, ECMO, and IABP records.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

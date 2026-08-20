@@ -1,0 +1,16 @@
+{
+  "short_name": "MedForms Pro",
+  "name": "MedForms Pro Clinical Document Registry",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#F8FAFC",
+  "theme_color": "#004AC6",
+  "display": "standalone",
+  "orientation": "portrait"
+}
