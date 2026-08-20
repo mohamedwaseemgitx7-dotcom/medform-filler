@@ -280,15 +280,6 @@ export const FormEditorView: React.FC<FormEditorViewProps> = ({
 
         {/* Right Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          {/* Fill Sample Data Button */}
-          <button
-            onClick={handleFillSampleData}
-            className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 border border-indigo-200 text-indigo-800 text-xs font-bold rounded-xl transition min-h-[36px] cursor-pointer"
-            title="Auto-fill sample patient details into form"
-          >
-            <Wand2 className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Fill Sample Data</span>
-          </button>
 
           {/* Status Selector */}
           <div className="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl border border-slate-200">
@@ -324,17 +315,6 @@ export const FormEditorView: React.FC<FormEditorViewProps> = ({
             <span className="hidden sm:inline">Calc</span>
           </button>
 
-          {/* Auto Calculate Fluid Button */}
-          {record.formType !== 'iabp' && (
-            <button
-              onClick={handleAutoCalculateFluid}
-              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-semibold rounded-xl transition min-h-[36px] cursor-pointer"
-              title="Calculate Prime Gain and Fluid Balance"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden md:inline">Auto-Balance</span>
-            </button>
-          )}
 
           {/* Download HTML Button */}
           <button
