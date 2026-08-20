@@ -1,6 +1,5 @@
 // Google Sheets & Drive API Integration for MedForms Pro
 import { PatientRecord, FormType } from '../types';
-import firebaseConfig from '../../firebase-applet-config.json';
 import { exportElementToPdf } from './pdfExport';
 
 export interface GoogleAuthState {
@@ -215,7 +214,7 @@ export async function requestGisAccessToken(
 
     try {
       const clientId =
-        firebaseConfig.oAuthClientId ||
+        (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
         '532363914519-agvd2k3nt3gdp66j6l64m7go893tn6o9.apps.googleusercontent.com';
 
       const scope =
