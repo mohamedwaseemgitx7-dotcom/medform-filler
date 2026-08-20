@@ -1,6 +1,9 @@
 # MedForms Pro - Perfusion & ICU Clinical Document Registry
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmohamedwaseemgitx7-dotcom%2Fmedform-filler)
+
 MedForms Pro is an enterprise clinical documentation and perfusion management system designed for cardiac surgeons, perfusionists, and ICU intensivists. It delivers exact clinical document fidelity, multi-doctor database isolation via PostgreSQL Row-Level Security (RLS) in Supabase, Google Workspace integration (4-tab Google Sheets sync & Google Drive PDF archiving), and offline-first client architecture.
+
 
 ---
 
